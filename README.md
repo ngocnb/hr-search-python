@@ -32,3 +32,31 @@ This command will:
 - Initialize all required tables (companies, departments, positions, employees)
 - Create performance indexes
 - Populate the database with sample employee data
+
+### 2. Start the Server
+
+To start the API server, run:
+
+```bash
+# Start with default settings (localhost:8000), debug = false
+python3 main.py
+
+# Start with debug mode enabled (hot reload on file changes)
+python3 main.py --debug=true
+
+# Start on a specific port
+python3 main.py --port=9000
+
+# Start with debug mode and custom port
+python3 main.py --debug=true --port=8080
+
+# Start on all interfaces
+python3 main.py --host=0.0.0.0 --port=8000
+```
+
+The server will display:
+
+- API running message with the URL
+- API Documentation link
+- OpenAPI Spec link
+- File watching status (if debug mode is enabled)

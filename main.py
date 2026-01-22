@@ -11,6 +11,7 @@ import threading
 from typing import Dict, List, Any
 import os
 import sys
+import argparse
 import glob
 from database import Database
 
@@ -299,4 +300,25 @@ def _watch_files_for_reload(httpd: HTTPServer):
 
 
 if __name__ == "__main__":
-    run_server(debug=True)
+    parser = argparse.ArgumentParser(description="HR Employee Search API")
+    parser.add_argument(
+        "--debug",
+        type=lambda x: x.lower() == "true",
+        default=False,
+        help="Enable debug mode with hot reload (default: False)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to run the server on (default: 8000)",
+    )
+    parser.add_argument(
+        "--host",
+        type=str,
+        default="localhost",
+        help="Host to bind to (default: localhost)",
+    )
+
+    args = parser.parse_args()
+    run_server(host=args.host, port=args.port, debug=args.debug)
