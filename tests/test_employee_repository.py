@@ -5,6 +5,7 @@ import unittest
 from typing import List
 from database import Database
 from repositories.employee_repository import EmployeeRepository
+from seed_edge_cases import seed_edge_cases, EDGE_CASES
 
 # Ensure helpers module is importable despite its package path
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -183,6 +184,35 @@ class TestEmployeeRepository(unittest.TestCase):
         # Ensure sorted by display_order asc
         display_orders = [col["display_order"] for col in columns]
         self.assertEqual(display_orders, sorted(display_orders))
+
+    def test_edge_case_seeding_and_query(self):
+        """Seed edge cases into temp DB and verify retrieval."""
+        result = seed_edge_cases(delete_first=True, db=self.db)
+        edge_company_id = result["company_id"]
+
+        employees, total = self.repo._search_employees(
+            company_ids=[edge_company_id],
+            search_query="",
+            department_ids=[],
+            position_ids=[],
+            locations=[],
+            statuses=[],
+            limit=200,
+            offset=0,
+        )
+
+        self.assertEqual(total, len(EDGE_CASES))
+        self.assertEqual(len(employees), len(EDGE_CASES))
+
+        first_names = {emp["first_name"] for emp in employees}
+        self.assertIn(
+            "Robert'; DROP TABLE employees; --", first_names
+        )  # SQL Injection attempt
+        self.assertIn("李", first_names)  # Chinese character
+        self.assertIn("محمد", first_names)  # Arabic character
+        self.assertIn("Владимир", first_names)  # Cyrillic character
+        self.assertIn("Test!@#$%", first_names)  # Special symbols in names
+        self.assertIn("Café", first_names)  # Unicode character with accent
 
 
 if __name__ == "__main__":
