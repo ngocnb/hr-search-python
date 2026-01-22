@@ -15,6 +15,7 @@ import argparse
 import glob
 from database import Database
 from rate_limiter import RateLimiter
+from utils.helpers import Helpers
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -44,16 +45,6 @@ class RequestHandler(BaseHTTPRequestHandler):
         parsed = urlparse(path)
         return parse_qs(parsed.query)
 
-    def _get_json_response(self, data: Dict[str, Any], status_code: int = 200):
-        """Send JSON response"""
-        self._set_headers(status_code)
-        response = json.dumps(data, indent=2)
-        self.wfile.write(response.encode("utf-8"))
-
-    def _get_error_response(self, message: str, status_code: int = 400):
-        """Send error response"""
-        self._get_json_response({"error": message}, status_code)
-
     def do_OPTIONS(self):
         """Handle OPTIONS requests for CORS"""
         self._set_headers(200)
@@ -74,11 +65,11 @@ class RequestHandler(BaseHTTPRequestHandler):
             self._serve_openapi_docs()
         elif path == "/api/v1/employees/search":
             # TODO: Implement employee search handling
-            self._get_json_response({"message": "Employee search endpoint"})
+            Helpers.get_json_response(self, {"message": "Employee search endpoint"})
         elif path == "/openapi.json":
             self._serve_openapi_spec()
         else:
-            self._get_error_response("Endpoint not found", 404)
+            Helpers.get_error_response(self, "Endpoint not found", 404)
 
     def _serve_openapi_docs(self):
         """Serve simple OpenAPI documentation page"""
