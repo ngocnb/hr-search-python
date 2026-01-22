@@ -31,7 +31,7 @@ class TestEmployeeRepository(unittest.TestCase):
         cls.db = Database(db_path=cls.temp_db_file.name)
         cls.db.create_sample_data()
 
-        cls.repo = EmployeeRepository()
+        cls.repo = EmployeeRepository(cls.db)
         # Inject database instance
         cls.repo.db = cls.db
 

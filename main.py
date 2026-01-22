@@ -15,7 +15,9 @@ import argparse
 import glob
 from database import Database
 from rate_limiter import RateLimiter
+from repositories.employee_repository import EmployeeRepository
 from utils.helpers import Helpers
+from controllers.employee_controller import EmployeeController
 
 
 class RequestHandler(BaseHTTPRequestHandler):
@@ -63,13 +65,54 @@ class RequestHandler(BaseHTTPRequestHandler):
 
         if path == "/":
             self._serve_openapi_docs()
-        elif path == "/api/v1/employees/search":
-            # TODO: Implement employee search handling
-            Helpers.get_json_response(self, {"message": "Employee search endpoint"})
         elif path == "/openapi.json":
             self._serve_openapi_spec()
         else:
-            Helpers.get_error_response(self, "Endpoint not found", 404)
+            self._get_error_response("Endpoint not found", 404)
+
+    def _get_json_response(self, data: Dict[str, Any], status_code: int = 200):
+        """Send JSON response"""
+        self._set_headers(status_code)
+        response = json.dumps(data, indent=2)
+        self.wfile.write(response.encode("utf-8"))
+
+    def _post_json_response(self, data: Dict[str, Any], status_code: int = 200):
+        """Send JSON response for POST requests"""
+        self._set_headers(status_code)
+        response = json.dumps(data, indent=2)
+        self.wfile.write(response.encode("utf-8"))
+
+    def _get_error_response(self, message: str, status_code: int = 400):
+        """Send error response"""
+        self._get_json_response({"error": message}, status_code)
+
+    def do_POST(self):
+        """Handle POST requests"""
+        client_ip = self._get_client_ip()
+
+        # Rate limiting
+        if not self.rate_limiter.is_allowed(client_ip):
+            self._get_error_response("Rate limit exceeded", 429)
+            return
+
+        parsed_path = urlparse(self.path)
+        path = parsed_path.path
+        employee_controller = EmployeeController(EmployeeRepository(self.db))
+
+        if path == "/api/v1/employees/search":
+            # Employee search handling post request
+            # Read and parse POST data from json body
+            content_length = int(self.headers.get("Content-Length", 0))
+            post_data = self.rfile.read(content_length)
+            try:
+                params = json.loads(post_data)
+                employee_data = employee_controller.search_employees(params)
+                self._post_json_response(employee_data)
+            except json.JSONDecodeError:
+                self._get_error_response("Invalid JSON body", 400)
+                return
+        else:
+            self._get_error_response("Endpoint not found", 404)
 
     def _serve_openapi_docs(self):
         """Serve simple OpenAPI documentation page"""
@@ -92,7 +135,7 @@ class RequestHandler(BaseHTTPRequestHandler):
             <p>API documentation for the HR Employee Search Microservice</p>
             
             <div class="endpoint">
-                <span class="method get">GET</span> <code>/api/v1/employees/search</code>
+                <span class="method post">POST</span> <code>/api/v1/employees/search</code>
                 <h3>Search Employees</h3>
                 <div class="param"><strong>company_ids</strong> (optional): Comma-separated company IDs</div>
                 <div class="param"><strong>q</strong> (optional): Search query (first name, last name, email)</div>

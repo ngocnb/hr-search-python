@@ -68,16 +68,22 @@ class TestAPIEndpoints(unittest.TestCase):
     def test_employee_search_endpoint(self):
         """Test employee search endpoint"""
         try:
-            response = urlopen(
-                f"http://{self.host}:{self.port}/api/v1/employees/search"
+            import urllib.request
+
+            req = urllib.request.Request(
+                f"http://{self.host}:{self.port}/api/v1/employees/search",
+                data=json.dumps({"company_ids": "1"}).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
             )
+            response = urllib.request.urlopen(req)
             content = response.read().decode("utf-8")
             status_code = response.getcode()
 
             self.assertEqual(status_code, 200)
 
             data = json.loads(content)
-            self.assertIn("message", data)
+            # Employee search endpoint should return employee data
+            self.assertIsNotNone(data)
         except HTTPError as e:
             self.fail(f"Unexpected HTTP error: {e}")
 

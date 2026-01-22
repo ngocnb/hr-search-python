@@ -4,10 +4,10 @@ from utils.helpers import Helpers
 
 
 class EmployeeRepository:
-    def handle_employee_search(self, query: str):
-        """Handle employee search requests"""
-        params = parse_qs(query)
+    def __init__(self, db):
+        self.db = db
 
+    def handle_employee_search(self, params: dict):
         # Parse optional parameters
         search_query = params.get("q", [""])[0].strip()
         company_ids = Helpers.parse_int_list(params.get("company_ids", [""])[0])
@@ -55,10 +55,10 @@ class EmployeeRepository:
                 },
             }
 
-            Helpers.get_json_response(self, response)
-
+            return response
         except Exception as e:
-            Helpers.get_error_response(f"Search failed: {str(e)}", 500)
+            print("Error during employee search:", e)
+            raise
 
     def _search_employees(
         self,
