@@ -33,6 +33,30 @@ This command will:
 - Create performance indexes
 - Populate the database with sample employee data
 
+### 1.2 Seed Large Dataset (Optional - for Performance Testing)
+
+To seed the database with 1 million employee records for performance testing, run:
+
+```bash
+# Seed with 1 million records (takes several minutes)
+python3 seed_large_dataset.py
+
+# Seed with custom number of records
+python3 seed_large_dataset.py --records=500000
+
+# Seed with 10 million records for larger-scale testing
+python3 seed_large_dataset.py --records=10000000
+```
+
+This script will:
+
+- Generate realistic employee data (names, emails, locations, departments, positions)
+- Insert records in optimized batches (10,000 records per batch)
+- Display progress and performance metrics
+- Show total database statistics when complete
+
+**Note**: Seeding 1 million records typically takes 2-5 minutes depending on system performance.
+
 ### 2. Start the Server
 
 To start the API server, run:

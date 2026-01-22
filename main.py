@@ -293,6 +293,9 @@ def _watch_files_for_reload(httpd: HTTPServer):
                     print("[HOT RELOAD] Restarting server...")
                     os.execv(sys.executable, [sys.executable] + sys.argv)
                     break
+            except (SyntaxError, IndentationError) as e:
+                print(f"[HOT RELOAD] Syntax error in {file_path}: {e}")
+                continue
             except OSError:
                 pass
 

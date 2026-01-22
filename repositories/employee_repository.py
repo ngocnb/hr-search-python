@@ -8,13 +8,14 @@ class EmployeeRepository:
         self.db = db
 
     def handle_employee_search(self, params: dict):
+        print("Search Parameters:", params)
         # Parse optional parameters
         search_query = params.get("q", [""])[0].strip()
-        company_ids = Helpers.parse_int_list(params.get("company_ids", [""])[0])
-        department_ids = Helpers.parse_int_list(params.get("department_ids", [""])[0])
-        position_ids = Helpers.parse_int_list(params.get("position_ids", [""])[0])
-        locations = Helpers.parse_string_list(params.get("locations", [""])[0])
-        statuses = Helpers.parse_string_list(params.get("statuses", [""])[0])
+        company_ids = params.get("company_ids", [])
+        department_ids = params.get("department_ids", [])
+        position_ids = params.get("position_ids", [])
+        locations = params.get("locations", [])
+        statuses = params.get("statuses", [])
         limit = min(int(params.get("limit", [50])[0]), 100)
         offset = (int(params.get("page", [1])[0]) - 1) * limit
 
