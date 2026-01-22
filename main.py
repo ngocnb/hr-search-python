@@ -9,6 +9,9 @@ from urllib.parse import urlparse, parse_qs
 import time
 import threading
 from typing import Dict, List, Any
+import os
+import sys
+import glob
 from database import Database
 
 
@@ -136,7 +139,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 <span class="method get">GET</span> <code>/api/v1/employees/search</code>
                 <h3>Search Employees</h3>
                 <div class="param"><strong>company_ids</strong> (optional): Comma-separated company IDs</div>
-                <div class="param"><strong>q</strong> (optional): Search query (name, email)</div>
+                <div class="param"><strong>q</strong> (optional): Search query (first name, last name, email)</div>
                 <div class="param"><strong>department_ids</strong> (optional): Comma-separated department IDs</div>
                 <div class="param"><strong>position_ids</strong> (optional): Comma-separated position IDs</div>
                 <div class="param"><strong>locations</strong> (optional): Comma-separated locations</div>
@@ -227,15 +230,73 @@ class RequestHandler(BaseHTTPRequestHandler):
         self._get_json_response(spec)
 
 
-def run_server(host: str = "localhost", port: int = 8000):
+def run_server(host: str = "localhost", port: int = 8000, debug: bool = False):
     """Run the HTTP server"""
     server_address = (host, port)
     httpd = HTTPServer(server_address, RequestHandler)
     print(f"HR Employee Search API running on http://{host}:{port}")
     print("API Documentation: http://localhost:8000")
     print("OpenAPI Spec: http://localhost:8000/openapi.json")
-    httpd.serve_forever()
+
+    if debug:
+        print("Debug mode is ON - Hot reload is enabled.")
+        # Start file watcher thread for hot reload
+        watcher_thread = threading.Thread(
+            target=_watch_files_for_reload, args=(httpd,), daemon=True
+        )
+        watcher_thread.start()
+
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        print("\nShutting down server...")
+        httpd.shutdown()
+
+
+def _watch_files_for_reload(httpd: HTTPServer):
+    """Watch Python files for changes and restart server"""
+    watched_files = {}
+    check_interval = 1  # Check every 1 second
+
+    # Get all Python files in project
+    def get_project_files():
+        py_files = glob.glob("**/*.py", recursive=True)
+        # Exclude __pycache__
+        return [f for f in py_files if "__pycache__" not in f]
+
+    # Initial scan
+    for file_path in get_project_files():
+        try:
+            watched_files[file_path] = os.path.getmtime(file_path)
+        except OSError:
+            pass
+
+    print(f"Watching {len(watched_files)} Python files for changes...")
+
+    while True:
+        time.sleep(check_interval)
+        current_files = get_project_files()
+
+        # Check for modified files
+        for file_path in current_files:
+            try:
+                current_mtime = os.path.getmtime(file_path)
+
+                if file_path not in watched_files:
+                    # New file detected
+                    print(f"[HOT RELOAD] New file detected: {file_path}")
+                    print("[HOT RELOAD] Restarting server...")
+                    os.execv(sys.executable, [sys.executable] + sys.argv)
+                    break
+                elif watched_files[file_path] != current_mtime:
+                    # File modified
+                    print(f"[HOT RELOAD] File modified: {file_path}")
+                    print("[HOT RELOAD] Restarting server...")
+                    os.execv(sys.executable, [sys.executable] + sys.argv)
+                    break
+            except OSError:
+                pass
 
 
 if __name__ == "__main__":
-    run_server()
+    run_server(debug=True)
