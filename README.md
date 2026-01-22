@@ -60,3 +60,46 @@ The server will display:
 - API Documentation link
 - OpenAPI Spec link
 - File watching status (if debug mode is enabled)
+
+## Testing
+
+### Test Structure
+
+Tests are organized in the `tests/` folder with separate test files for different features:
+
+- `tests/test_rate_limiter.py` - Tests for rate limiting functionality
+- `tests/test_endpoints.py` - Tests for API endpoints
+- `tests/test_headers.py` - Tests for HTTP headers and response formatting
+
+### Run Unit Tests
+
+To run the unit tests, use:
+
+```bash
+# Run all tests
+python3 -m unittest discover -s tests -p "test_*.py"
+
+# Run all tests with verbose output
+python3 -m unittest discover -s tests -p "test_*.py" -v
+
+# Run specific test module
+python3 -m unittest tests.test_rate_limiter
+
+# Run specific test class
+python3 -m unittest tests.test_rate_limiter.TestRateLimiter
+
+# Run specific test method
+python3 -m unittest tests.test_rate_limiter.TestRateLimiter.test_rate_limiter_allows_initial_requests
+
+# Run endpoint tests only
+python3 -m unittest tests.test_endpoints
+```
+
+### Test Coverage
+
+The test suite includes:
+
+- **Rate Limiter Tests** (`test_rate_limiter.py`): Token bucket algorithm, rate limiting per client, token refill mechanism
+- **API Endpoint Tests** (`test_endpoints.py`): OpenAPI docs, OpenAPI spec, employee search, 404 errors, OPTIONS requests
+- **HTTP Header Tests** (`test_headers.py`): CORS headers, content-type validation
+- **Content-Type Tests**: Verify correct content types for different endpoints
