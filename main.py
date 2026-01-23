@@ -106,6 +106,9 @@ class RequestHandler(BaseHTTPRequestHandler):
             except json.JSONDecodeError:
                 self._error_response("Invalid JSON body", 400)
                 return
+            except ValueError as e:
+                self._error_response(str(e), 400)
+                return
         else:
             self._error_response("Endpoint not found", 404)
 
@@ -288,9 +291,6 @@ def _watch_files_for_reload(httpd: HTTPServer):
                     print("[HOT RELOAD] Restarting server...")
                     os.execv(sys.executable, [sys.executable] + sys.argv)
                     break
-            except (SyntaxError, IndentationError) as e:
-                print(f"[HOT RELOAD] Syntax error in {file_path}: {e}")
-                continue
             except OSError:
                 pass
 

@@ -1,6 +1,4 @@
-from typing import Any, Dict, List
-from urllib.parse import parse_qs
-from utils.helpers import Helpers
+from typing import Any
 
 
 class EmployeeRepository:
@@ -72,12 +70,12 @@ class EmployeeRepository:
 
     def _search_employees(
         self,
-        company_ids: List[int],
+        company_ids: list[int],
         search_query: str,
-        department_ids: List[int],
-        position_ids: List[int],
-        locations: List[str],
-        statuses: List[str],
+        department_ids: list[int],
+        position_ids: list[int],
+        locations: list[str],
+        statuses: list[str],
         limit: int,
         offset: int,
     ) -> tuple:
@@ -148,7 +146,7 @@ class EmployeeRepository:
         conn.close()
         return employees, total_count
 
-    def _get_column_configuration(self) -> List[Dict[str, Any]]:
+    def _get_column_configuration(self) -> list[dict[str, Any]]:
         """Get column configuration for dynamic columns"""
         conn = self.db.get_connection()
         cursor = conn.cursor()

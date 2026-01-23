@@ -189,22 +189,24 @@ class TestEmployeeSearchAPI(unittest.TestCase):
         self.assertEqual(pagination["offset"], 5)
 
     def test_search_with_max_limit(self):
-        """Test that limit is capped at 100"""
-        response = self._make_search_request(
-            {
-                "q": "",
-                "company_ids": [],
-                "department_ids": [],
-                "position_ids": [],
-                "locations": [],
-                "statuses": [],
-                "limit": 999,
-                "page": 1,
-            }
-        )
+        """Test that limit > 100 is rejected"""
+        with self.assertRaises(HTTPError) as context:
+            self._make_search_request(
+                {
+                    "q": "",
+                    "company_ids": [],
+                    "department_ids": [],
+                    "position_ids": [],
+                    "locations": [],
+                    "statuses": [],
+                    "limit": 999,
+                    "page": 1,
+                }
+            )
 
-        data = json.loads(response.read().decode("utf-8"))
-        self.assertEqual(data["pagination"]["limit"], 100)
+        self.assertEqual(context.exception.code, 400)
+        payload = json.loads(context.exception.read().decode("utf-8"))
+        self.assertIn("limit", payload.get("error", ""))
 
     def test_search_invalid_json(self):
         """Test search endpoint with invalid JSON"""
@@ -327,6 +329,42 @@ class TestEmployeeSearchAPI(unittest.TestCase):
         self.assertEqual(response.getcode(), 200)
         data = json.loads(response.read().decode("utf-8"))
         self.assertIn("employees", data)
+
+    def test_validation_fails_on_limit_too_high(self):
+        """Validation should reject limit > 100"""
+        with self.assertRaises(HTTPError) as context:
+            self._make_search_request({"limit": 1000, "page": 1})
+
+        self.assertEqual(context.exception.code, 400)
+        payload = json.loads(context.exception.read().decode("utf-8"))
+        self.assertIn("limit", payload.get("error", ""))
+
+    def test_validation_fails_on_negative_page(self):
+        """Validation should reject non-positive page"""
+        with self.assertRaises(HTTPError) as context:
+            self._make_search_request({"limit": 10, "page": 0})
+
+        self.assertEqual(context.exception.code, 400)
+        payload = json.loads(context.exception.read().decode("utf-8"))
+        self.assertIn("page", payload.get("error", ""))
+
+    def test_validation_fails_on_non_int_company_ids(self):
+        """Validation should reject non-integer company_ids"""
+        with self.assertRaises(HTTPError) as context:
+            self._make_search_request({"company_ids": ["abc"], "page": 1, "limit": 10})
+
+        self.assertEqual(context.exception.code, 400)
+        payload = json.loads(context.exception.read().decode("utf-8"))
+        self.assertIn("company_ids", payload.get("error", ""))
+
+    def test_validation_fails_on_non_string_query(self):
+        """Validation should reject non-string q"""
+        with self.assertRaises(HTTPError) as context:
+            self._make_search_request({"q": 123, "page": 1, "limit": 10})
+
+        self.assertEqual(context.exception.code, 400)
+        payload = json.loads(context.exception.read().decode("utf-8"))
+        self.assertIn("q", payload.get("error", ""))
 
 
 if __name__ == "__main__":
