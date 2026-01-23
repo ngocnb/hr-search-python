@@ -20,12 +20,13 @@ from utils.helpers import Helpers
 from controllers.employee_controller import EmployeeController
 
 
+# Initialize database and rate limiter at module level (singleton pattern)
+_db_instance = Database()
+_rate_limiter_instance = RateLimiter()
+
+
 class RequestHandler(BaseHTTPRequestHandler):
     """HTTP request handler for employee search API"""
-
-    # Initialize database and rate limiter as class variables
-    db = Database()
-    rate_limiter = RateLimiter()
 
     def _set_headers(
         self, status_code: int = 200, content_type: str = "application/json"
@@ -56,8 +57,8 @@ class RequestHandler(BaseHTTPRequestHandler):
         client_ip = self._get_client_ip()
 
         # Rate limiting
-        if not self.rate_limiter.is_allowed(client_ip):
-            self._get_error_response("Rate limit exceeded", 429)
+        if not _rate_limiter_instance.is_allowed(client_ip):
+            self._error_response("Rate limit exceeded", 429)
             return
 
         parsed_path = urlparse(self.path)
@@ -68,36 +69,30 @@ class RequestHandler(BaseHTTPRequestHandler):
         elif path == "/openapi.json":
             self._serve_openapi_spec()
         else:
-            self._get_error_response("Endpoint not found", 404)
+            self._error_response("Endpoint not found", 404)
 
-    def _get_json_response(self, data: Dict[str, Any], status_code: int = 200):
+    def _json_response(self, data: Dict[str, Any], status_code: int = 200):
         """Send JSON response"""
         self._set_headers(status_code)
         response = json.dumps(data, indent=2)
         self.wfile.write(response.encode("utf-8"))
 
-    def _post_json_response(self, data: Dict[str, Any], status_code: int = 200):
-        """Send JSON response for POST requests"""
-        self._set_headers(status_code)
-        response = json.dumps(data, indent=2)
-        self.wfile.write(response.encode("utf-8"))
-
-    def _get_error_response(self, message: str, status_code: int = 400):
+    def _error_response(self, message: str, status_code: int = 400):
         """Send error response"""
-        self._get_json_response({"error": message}, status_code)
+        self._json_response({"error": message}, status_code)
 
     def do_POST(self):
         """Handle POST requests"""
         client_ip = self._get_client_ip()
 
         # Rate limiting
-        if not self.rate_limiter.is_allowed(client_ip):
-            self._get_error_response("Rate limit exceeded", 429)
+        if not _rate_limiter_instance.is_allowed(client_ip):
+            self._error_response("Rate limit exceeded", 429)
             return
 
         parsed_path = urlparse(self.path)
         path = parsed_path.path
-        employee_controller = EmployeeController(EmployeeRepository(self.db))
+        employee_controller = EmployeeController(EmployeeRepository(_db_instance))
 
         if path == "/api/v1/employees/search":
             # Employee search handling post request
@@ -107,12 +102,12 @@ class RequestHandler(BaseHTTPRequestHandler):
             try:
                 params = json.loads(post_data)
                 employee_data = employee_controller.search_employees(params)
-                self._post_json_response(employee_data)
+                self._json_response(employee_data)
             except json.JSONDecodeError:
-                self._get_error_response("Invalid JSON body", 400)
+                self._error_response("Invalid JSON body", 400)
                 return
         else:
-            self._get_error_response("Endpoint not found", 404)
+            self._error_response("Endpoint not found", 404)
 
     def _serve_openapi_docs(self):
         """Serve simple OpenAPI documentation page"""
@@ -226,7 +221,7 @@ class RequestHandler(BaseHTTPRequestHandler):
                 }
             },
         }
-        self._get_json_response(spec)
+        self._json_response(spec)
 
 
 def run_server(host: str = "localhost", port: int = 8000, debug: bool = False):
