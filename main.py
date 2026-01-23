@@ -254,6 +254,7 @@ def _watch_files_for_reload(httpd: HTTPServer):
     """Watch Python files for changes and restart server"""
     watched_files = {}
     check_interval = 1  # Check every 1 second
+    retry_interval = 5  # Wait 5 seconds before retrying on error
 
     # Get all Python files in project
     def get_project_files():
@@ -283,13 +284,23 @@ def _watch_files_for_reload(httpd: HTTPServer):
                     # New file detected
                     print(f"[HOT RELOAD] New file detected: {file_path}")
                     print("[HOT RELOAD] Restarting server...")
-                    os.execv(sys.executable, [sys.executable] + sys.argv)
+                    try:
+                        os.execv(sys.executable, [sys.executable] + sys.argv)
+                    except Exception as e:
+                        print(f"[HOT RELOAD] Error restarting: {e}")
+                        print(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
+                        time.sleep(retry_interval)
                     break
                 elif watched_files[file_path] != current_mtime:
                     # File modified
                     print(f"[HOT RELOAD] File modified: {file_path}")
                     print("[HOT RELOAD] Restarting server...")
-                    os.execv(sys.executable, [sys.executable] + sys.argv)
+                    try:
+                        os.execv(sys.executable, [sys.executable] + sys.argv)
+                    except Exception as e:
+                        print(f"[HOT RELOAD] Error restarting: {e}")
+                        print(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
+                        time.sleep(retry_interval)
                     break
             except OSError:
                 pass

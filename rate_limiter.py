@@ -13,9 +13,8 @@ class RateLimiter:
 
     def is_allowed(self, client_ip: str) -> bool:
         """Check if client is allowed to make a request"""
+        now = time.time()
         with self.lock:
-            now = time.time()
-
             if client_ip not in self.clients:
                 self.clients[client_ip] = {
                     "tokens": self.requests_per_second,
