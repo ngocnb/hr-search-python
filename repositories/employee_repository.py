@@ -9,15 +9,24 @@ class EmployeeRepository:
 
     def handle_employee_search(self, params: dict):
         print("Search Parameters:", params)
-        # Parse optional parameters
-        search_query = params.get("q", [""])[0].strip()
-        company_ids = params.get("company_ids", [])
-        department_ids = params.get("department_ids", [])
-        position_ids = params.get("position_ids", [])
-        locations = params.get("locations", [])
-        statuses = params.get("statuses", [])
-        limit = min(int(params.get("limit", [50])[0]), 100)
-        offset = (int(params.get("page", [1])[0]) - 1) * limit
+        # Parse optional parameters (expecting strings, not lists)
+        search_query = (
+            params.get("q", "").strip() if isinstance(params.get("q"), str) else ""
+        )
+        company_ids = params.get("company_ids", []) or []
+        department_ids = params.get("department_ids", []) or []
+        position_ids = params.get("position_ids", []) or []
+        locations = params.get("locations", []) or []
+        statuses = params.get("statuses", []) or []
+
+        # Handle limit and page parameters (can be int or string)
+        limit_param = params.get("limit", 50)
+        page_param = params.get("page", 1)
+        limit = min(
+            int(limit_param) if isinstance(limit_param, (int, str)) else 50, 100
+        )
+        page = int(page_param) if isinstance(page_param, (int, str)) else 1
+        offset = (page - 1) * limit
 
         # Build and execute search query
         try:
