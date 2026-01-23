@@ -111,11 +111,9 @@ class EmployeeRepository:
 
         # Add search conditions
         if search_query:
-            where += (
-                " AND (e.first_name LIKE ? OR e.last_name LIKE ? OR e.email LIKE ?)"
-            )
-            search_param = f"%{search_query}%"
-            params.extend([search_param, search_param, search_param])
+            where += " AND e.id IN (SELECT rowid FROM employees_fts WHERE employees_fts MATCH ?)"
+            search_param = f"{search_query}*"
+            params.append(search_param)
 
         if company_ids:
             placeholders = ",".join("?" * len(company_ids))
