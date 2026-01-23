@@ -95,7 +95,7 @@ class Database:
             "CREATE INDEX IF NOT EXISTS idx_employees_company_id ON employees(company_id)"
         )
         cursor.execute(
-            "CREATE INDEX IF NOT EXISTS idx_employees_name ON employees(first_name, last_name)"
+            "CREATE INDEX IF NOT EXISTS idx_employees_name ON employees(first_name, last_name, email)"
         )
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_employees_department ON employees(company_id, department_id)"
@@ -111,6 +111,19 @@ class Database:
         )
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_employees_status ON employees(company_id, status)"
+        )
+        # Additional per-column indexes with NOCASE to optimize case-insensitive prefix searches
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_employees_first_name_nc ON employees(first_name COLLATE NOCASE)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_employees_last_name_nc ON employees(last_name COLLATE NOCASE)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_employees_email_nc ON employees(email COLLATE NOCASE)"
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_employees_location_nc ON employees(location COLLATE NOCASE)"
         )
 
         conn.commit()

@@ -1,4 +1,5 @@
 from typing import Any
+from functools import lru_cache
 
 
 class EmployeeRepository:
@@ -39,22 +40,8 @@ class EmployeeRepository:
                 offset,
             )
 
-            # Get column configuration
-            columns = self._get_column_configuration()
-
-            # Format response with dynamic columns
-            formatted_employees = []
-            for employee in employees:
-                formatted_employee = {}
-                for column in columns:
-                    if column["column_name"] in employee:
-                        formatted_employee[column["column_name"]] = employee[
-                            column["column_name"]
-                        ]
-                formatted_employees.append(formatted_employee)
-
             response = {
-                "employees": formatted_employees,
+                "employees": employees,
                 "pagination": {
                     "total": total_count,
                     "limit": limit,
@@ -83,13 +70,41 @@ class EmployeeRepository:
         conn = self.db.get_connection()
         cursor = conn.cursor()
 
+        # Get column configuration
+        columns = lru_cache(maxsize=1)(self._get_column_configuration)()
+        column_names: list[str] = [col["column_name"] for col in columns]
+        # build select clause based on visible columns
+        select_clause = ", ".join(
+            [
+                f"e.{col}"
+                for col in column_names
+                if col
+                in [
+                    "first_name",
+                    "last_name",
+                    "email",
+                    "location",
+                    "phone",
+                    "status",
+                    "company_id",
+                ]
+            ]
+        )
+        join_clause = ""
+        # build join clauses if department or position is visible
+        if "department" in column_names:
+            select_clause += ", d.name as department"
+            join_clause += " LEFT JOIN departments d ON e.department_id = d.id"
+
+        if "position" in column_names:
+            select_clause += ", p.title as position"
+            join_clause += " LEFT JOIN positions p ON e.position_id = p.id"
+
         # Build base query with joins
-        query = """
-            SELECT e.id, e.first_name, e.last_name, e.email, e.location, e.phone, e.status, e.company_id,
-                   d.name as department, e.department_id as department_id, p.title as position, e.position_id as position_id
+        query = f"""
+            SELECT e.id, {select_clause}
             FROM employees e
-            LEFT JOIN departments d ON e.department_id = d.id
-            LEFT JOIN positions p ON e.position_id = p.id
+            {join_clause}
         """
         params = []
         where = "WHERE 1=1"
