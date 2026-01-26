@@ -4,11 +4,12 @@ import os
 # Adds the parent directory to the search path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from database import Database
+from utils.database import Database
 
 
-def create_fts_index():
-    db = Database()
+def create_fts_index(db = None):
+    if db is None:
+        db = Database()
     conn = db.get_connection()
     cursor = conn.cursor()
 

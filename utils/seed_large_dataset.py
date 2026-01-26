@@ -1,137 +1,33 @@
 """
 Seed script to insert 1 million employee records for performance testing
-Usage: python3 seed_large_dataset.py [--records=1000000]
+Usage: python3 utils/seed_large_dataset.py [--records=1000000]
 """
 
 import argparse
 import time
 import random
-import string
-from database import Database
+import sys
+import os
+import json
+
+# Adds the parent directory to the search path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from utils.database import Database
 
 
-# Sample data pools
-FIRST_NAMES = [
-    "John",
-    "Jane",
-    "Mike",
-    "Sarah",
-    "Robert",
-    "Emily",
-    "David",
-    "Lisa",
-    "James",
-    "Mary",
-    "Charles",
-    "Patricia",
-    "Michael",
-    "Jennifer",
-    "William",
-    "Linda",
-    "Richard",
-    "Barbara",
-    "Joseph",
-    "Susan",
-    "Thomas",
-    "Jessica",
-    "Christopher",
-    "Sarah",
-    "Daniel",
-    "Karen",
-    "Matthew",
-    "Nancy",
-    "Anthony",
-    "Angela",
-    "Mark",
-    "Melissa",
-    "Donald",
-    "Deborah",
-    "Steven",
-    "Stephanie",
-    "Paul",
-    "Rebecca",
-    "Andrew",
-    "Sharon",
-    "Joshua",
-    "Laura",
-    "Kenneth",
-]
+# Load data from JSON files
+def load_json_data(filename):
+    """Load data from JSON file in utils directory"""
+    file_path = os.path.join(os.path.dirname(__file__), filename)
+    with open(file_path, "r") as f:
+        return json.load(f)
 
-LAST_NAMES = [
-    "Smith",
-    "Johnson",
-    "Williams",
-    "Brown",
-    "Jones",
-    "Garcia",
-    "Miller",
-    "Davis",
-    "Rodriguez",
-    "Martinez",
-    "Hernandez",
-    "Lopez",
-    "Gonzalez",
-    "Wilson",
-    "Anderson",
-    "Thomas",
-    "Taylor",
-    "Moore",
-    "Jackson",
-    "Martin",
-    "Lee",
-    "Perez",
-    "Thompson",
-    "White",
-    "Harris",
-    "Sanchez",
-    "Clark",
-    "Ramirez",
-    "Lewis",
-    "Robinson",
-    "Young",
-    "Allen",
-    "King",
-    "Wright",
-    "Scott",
-    "Torres",
-    "Peterson",
-    "Phillips",
-    "Campbell",
-    "Parker",
-]
 
-LOCATIONS = [
-    "New York",
-    "Los Angeles",
-    "Chicago",
-    "Houston",
-    "Phoenix",
-    "Philadelphia",
-    "San Antonio",
-    "San Diego",
-    "Dallas",
-    "San Jose",
-    "Austin",
-    "Jacksonville",
-    "San Francisco",
-    "Columbus",
-    "Charlotte",
-    "San Antonio",
-    "Memphis",
-    "Boston",
-    "Denver",
-    "Washington",
-    "Seattle",
-    "Miami",
-    "Atlanta",
-    "Denver",
-    "San Francisco",
-    "Toronto",
-    "Vancouver",
-    "London",
-    "Berlin",
-    "Paris",
-]
+# Sample data pools loaded from JSON files
+FIRST_NAMES = load_json_data("first-names.json")
+LAST_NAMES = load_json_data("last-names.json")
+LOCATIONS = load_json_data("locations.json")
 
 DEPARTMENTS = [
     "Engineering",

@@ -3,9 +3,10 @@ import sys
 import tempfile
 import unittest
 from typing import List
-from database import Database
+from utils.database import Database
 from repositories.employee_repository import EmployeeRepository
-from seed_edge_cases import seed_edge_cases, EDGE_CASES
+from utils.seed_edge_cases import seed_edge_cases, EDGE_CASES
+from utils.database_fts import create_fts_index
 
 # Ensure helpers module is importable despite its package path
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -31,6 +32,8 @@ class TestEmployeeRepository(unittest.TestCase):
         cls.temp_db_file = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
         cls.db = Database(db_path=cls.temp_db_file.name)
         cls.db.create_sample_data()
+        # Ensure FTS index is created
+        create_fts_index(cls.db)
 
         cls.repo = EmployeeRepository(cls.db)
         # Inject database instance

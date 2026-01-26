@@ -7,7 +7,6 @@ class EmployeeRepository:
         self.db = db
 
     def handle_employee_search(self, params: dict):
-        print("Search Parameters:", params)
         # Parse optional parameters (expecting strings, not lists)
         search_query = (
             params.get("q", "").strip() if isinstance(params.get("q"), str) else ""
@@ -157,8 +156,6 @@ class EmployeeRepository:
         query += " ORDER BY e.last_name, e.first_name LIMIT ? OFFSET ?"
         params.extend([limit, offset])
 
-        print("Final Query:", query)
-        print("With Parameters:", params)
         cursor.execute(query, params)
         employees = [dict(row) for row in cursor.fetchall()]
 

@@ -1,11 +1,11 @@
 """
 Seed script for security and edge case testing
 Inserts abnormal data to test application robustness, input validation, and security
-Usage: python3 seed_edge_cases.py [--delete-first]
+Usage: python3 utils/seed_edge_cases.py [--delete-first]
 """
 
 import argparse
-from database import Database
+from utils.database import Database
 
 
 # Edge case and security test data

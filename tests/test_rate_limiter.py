@@ -4,7 +4,7 @@ Unit tests for RateLimiter functionality
 
 import unittest
 import time
-from rate_limiter import RateLimiter
+from utils.rate_limiter import RateLimiter
 
 
 class TestRateLimiter(unittest.TestCase):

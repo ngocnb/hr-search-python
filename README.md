@@ -23,7 +23,7 @@ A lightweight employee search API built with Python's standard library only (no 
 To initialize the database with tables and sample data, run:
 
 ```bash
-python3 -c "from database import Database; db = Database(); db.seed_sample_data(); print('Database created successfully!')"
+python3 -c 'from utils.database import Database; db = Database(); db.create_sample_data(); print("Database created successfully!")'
 ```
 
 This command will:
@@ -56,13 +56,13 @@ To seed the database with 1 million employee records for performance testing, ru
 
 ```bash
 # Seed with 1 million records (takes several minutes)
-python3 seed_large_dataset.py
+python3 utils/seed_large_dataset.py
 
 # Seed with custom number of records
-python3 seed_large_dataset.py --records=500000
+python3 utils/seed_large_dataset.py --records=500000
 
 # Seed with 10 million records for larger-scale testing
-python3 seed_large_dataset.py --records=10000000
+python3 utils/seed_large_dataset.py --records=10000000
 ```
 
 This script will:

@@ -13,8 +13,8 @@ import os
 import sys
 import argparse
 import glob
-from database import Database
-from rate_limiter import RateLimiter
+from utils.database import Database
+from utils.rate_limiter import RateLimiter
 from repositories.employee_repository import EmployeeRepository
 from utils.helpers import Helpers
 from controllers.employee_controller import EmployeeController
