@@ -19,6 +19,24 @@ class Database:
         conn.execute("PRAGMA foreign_keys=ON")
         return conn
 
+    def __enter__(self) -> sqlite3.Connection:
+        """Context manager entry - returns a connection"""
+        self._conn = self.get_connection()
+        return self._conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context manager exit - ensures connection is closed"""
+        if hasattr(self, "_conn"):
+            if exc_type is None:
+                # No exception, commit the transaction
+                self._conn.commit()
+            else:
+                # Exception occurred, rollback
+                self._conn.rollback()
+            self._conn.close()
+            delattr(self, "_conn")
+        return False  # Don't suppress exceptions
+
     def init_database(self):
         """Initialize database tables and indexes"""
         conn = self.get_connection()
