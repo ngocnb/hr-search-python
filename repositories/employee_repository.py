@@ -7,23 +7,24 @@ class EmployeeRepository:
         self.db = db
 
     def handle_employee_search(self, params: dict):
-        # Parse optional parameters (expecting strings, not lists)
-        search_query = (
-            params.get("q", "").strip() if isinstance(params.get("q"), str) else ""
-        )
-        company_ids = params.get("company_ids", []) or []
-        department_ids = params.get("department_ids", []) or []
-        position_ids = params.get("position_ids", []) or []
-        locations = params.get("locations", []) or []
-        statuses = params.get("statuses", []) or []
+        """Handle employee search with validated parameters from controller.
 
-        # Handle limit and page parameters (can be int or string)
-        limit_param = params.get("limit", 50)
-        page_param = params.get("page", 1)
-        limit = min(
-            int(limit_param) if isinstance(limit_param, (int, str)) else 50, 100
-        )
-        page = int(page_param) if isinstance(page_param, (int, str)) else 1
+        Assumes params are already validated and normalized by the controller:
+        - q: sanitized string
+        - company_ids, department_ids, position_ids: list of positive ints
+        - locations, statuses: list of strings
+        - limit: int (1-100)
+        - page: positive int
+        """
+        # Extract parameters (already validated by controller)
+        search_query = params.get("q", "")
+        company_ids = params.get("company_ids", [])
+        department_ids = params.get("department_ids", [])
+        position_ids = params.get("position_ids", [])
+        locations = params.get("locations", [])
+        statuses = params.get("statuses", [])
+        limit = params.get("limit", 50)
+        page = params.get("page", 1)
         offset = (page - 1) * limit
 
         # Build and execute search query
