@@ -1,5 +1,8 @@
 from typing import Any
 from functools import lru_cache
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class EmployeeRepository:
@@ -52,8 +55,8 @@ class EmployeeRepository:
 
             return response
         except Exception as e:
-            print("Error during employee search:", e)
-            raise
+            logger.error(f"Database error during employee search: {e}", exc_info=True)
+            raise RuntimeError(f"Failed to execute employee search: {str(e)}") from e
 
     def _search_employees(
         self,

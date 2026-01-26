@@ -3,6 +3,9 @@ Database schema and setup for HR Employee Search Microservice
 """
 
 import sqlite3
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class Database:
@@ -312,7 +315,7 @@ class Database:
 
         conn.commit()
         conn.close()
-        print("Sample data created successfully!")
+        logger.info("Sample data created successfully!")
 
 
 # Database instance

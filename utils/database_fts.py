@@ -1,10 +1,18 @@
 import sys
 import os
+import logging
 
 # Adds the parent directory to the search path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from utils.database import Database
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 
 def create_fts_index(db = None):
@@ -14,7 +22,7 @@ def create_fts_index(db = None):
     cursor = conn.cursor()
 
     # FTS5 virtual table for fast text search on names/emails
-    print("Creating FTS index...")
+    logger.info("Creating FTS index...")
     cursor.execute(
         """
         CREATE VIRTUAL TABLE IF NOT EXISTS employees_fts USING fts5(
@@ -27,7 +35,7 @@ def create_fts_index(db = None):
     )
 
     # Triggers to keep FTS index in sync
-    print("Creating triggers for FTS index...")
+    logger.info("Creating triggers for FTS index...")
     cursor.execute(
         """
         CREATE TRIGGER IF NOT EXISTS employees_ai AFTER INSERT ON employees BEGIN
@@ -56,7 +64,7 @@ def create_fts_index(db = None):
     )
 
     # Backfill FTS index for existing rows
-    print("Backfilling FTS index...")
+    logger.info("Backfilling FTS index...")
     cursor.execute(
         """
         INSERT INTO employees_fts(rowid, first_name, last_name, email)
@@ -66,7 +74,7 @@ def create_fts_index(db = None):
 
     conn.commit()
     conn.close()
-    print("FTS index and triggers created.")
+    logger.info("FTS index and triggers created.")
 
 
 def drop_fts_index():
@@ -74,7 +82,7 @@ def drop_fts_index():
     conn = db.get_connection()
     cursor = conn.cursor()
 
-    print("Dropping FTS index and triggers...")
+    logger.info("Dropping FTS index and triggers...")
     cursor.execute("DROP TRIGGER IF EXISTS employees_ai;")
     cursor.execute("DROP TRIGGER IF EXISTS employees_ad;")
     cursor.execute("DROP TRIGGER IF EXISTS employees_au;")
@@ -82,7 +90,7 @@ def drop_fts_index():
 
     conn.commit()
     conn.close()
-    print("FTS index and triggers dropped.")
+    logger.info("FTS index and triggers dropped.")
 
 
 if __name__ == "__main__":

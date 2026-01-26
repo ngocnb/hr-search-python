@@ -4,6 +4,7 @@ A FastAPI-like web service built with Python standard library only
 """
 
 import json
+import logging
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import time
@@ -16,9 +17,16 @@ import glob
 from utils.database import Database
 from utils.rate_limiter import RateLimiter
 from repositories.employee_repository import EmployeeRepository
-from utils.helpers import Helpers
 from controllers.employee_controller import EmployeeController
 from utils.openapi_docs import get_openapi_docs_html, get_openapi_spec
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 
 # Initialize database and rate limiter at module level (singleton pattern)
@@ -104,11 +112,17 @@ class RequestHandler(BaseHTTPRequestHandler):
                 params = json.loads(post_data)
                 employee_data = employee_controller.search_employees(params)
                 self._json_response(employee_data)
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
+                logger.warning(f"Invalid JSON received from {client_ip}: {e}")
                 self._error_response("Invalid JSON body", 400)
                 return
             except ValueError as e:
+                logger.warning(f"Validation error from {client_ip}: {e}")
                 self._error_response(str(e), 400)
+                return
+            except Exception as e:
+                logger.error(f"Unexpected error processing search from {client_ip}: {e}", exc_info=True)
+                self._error_response("Internal server error", 500)
                 return
         else:
             self._error_response("Endpoint not found", 404)
@@ -129,12 +143,12 @@ def run_server(host: str = "localhost", port: int = 8000, debug: bool = False):
     """Run the HTTP server"""
     server_address = (host, port)
     httpd = HTTPServer(server_address, RequestHandler)
-    print(f"HR Employee Search API running on http://{host}:{port}")
-    print("API Documentation: http://localhost:8000")
-    print("OpenAPI Spec: http://localhost:8000/openapi.json")
+    logger.info(f"HR Employee Search API running on http://{host}:{port}")
+    logger.info("API Documentation: http://localhost:8000")
+    logger.info("OpenAPI Spec: http://localhost:8000/openapi.json")
 
     if debug:
-        print("Debug mode is ON - Hot reload is enabled.")
+        logger.info("Debug mode is ON - Hot reload is enabled.")
         # Start file watcher thread for hot reload
         watcher_thread = threading.Thread(
             target=_watch_files_for_reload, args=(httpd,), daemon=True
@@ -144,7 +158,7 @@ def run_server(host: str = "localhost", port: int = 8000, debug: bool = False):
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\nShutting down server...")
+        logger.info("\nShutting down server...")
         httpd.shutdown()
 
 
@@ -167,7 +181,7 @@ def _watch_files_for_reload(httpd: HTTPServer):
         except OSError:
             pass
 
-    print(f"Watching {len(watched_files)} Python files for changes...")
+    logger.info(f"Watching {len(watched_files)} Python files for changes...")
 
     while True:
         time.sleep(check_interval)
@@ -180,24 +194,24 @@ def _watch_files_for_reload(httpd: HTTPServer):
 
                 if file_path not in watched_files:
                     # New file detected
-                    print(f"[HOT RELOAD] New file detected: {file_path}")
-                    print("[HOT RELOAD] Restarting server...")
+                    logger.info(f"[HOT RELOAD] New file detected: {file_path}")
+                    logger.info("[HOT RELOAD] Restarting server...")
                     try:
                         os.execv(sys.executable, [sys.executable] + sys.argv)
                     except Exception as e:
-                        print(f"[HOT RELOAD] Error restarting: {e}")
-                        print(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
+                        logger.error(f"[HOT RELOAD] Error restarting: {e}")
+                        logger.info(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
                         time.sleep(retry_interval)
                     break
                 elif watched_files[file_path] != current_mtime:
                     # File modified
-                    print(f"[HOT RELOAD] File modified: {file_path}")
-                    print("[HOT RELOAD] Restarting server...")
+                    logger.info(f"[HOT RELOAD] File modified: {file_path}")
+                    logger.info("[HOT RELOAD] Restarting server...")
                     try:
                         os.execv(sys.executable, [sys.executable] + sys.argv)
                     except Exception as e:
-                        print(f"[HOT RELOAD] Error restarting: {e}")
-                        print(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
+                        logger.error(f"[HOT RELOAD] Error restarting: {e}")
+                        logger.info(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
                         time.sleep(retry_interval)
                     break
             except OSError:
