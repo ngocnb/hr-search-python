@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.sqlite
+*.sqlite3
+.git
+.github
+.pytest_cache/
+.DS_Store
+.idea
+.vscode

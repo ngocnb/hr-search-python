@@ -35,20 +35,16 @@ This command will:
 
 ### 1.2 Create/Drop Full Text Search
 
-To create or drop the full text search indexes, run:
+To create the full text search indexes, run:
 
 ```bash
 # Create full text search indexes
 python3 utils/database_fts.py create
-
-# Drop full text search indexes
-python3 utils/database_fts.py drop
 ```
 
-These commands will:
+This commands will:
 
 - **create**: Set up full text search (FTS5) virtual tables for optimized text searching
-- **drop**: Remove the full text search virtual tables from the database
 
 ### 1.3 Seed Large Dataset (Optional - for Performance Testing)
 
@@ -101,6 +97,26 @@ The server will display:
 - API Documentation link
 - OpenAPI Spec link
 - File watching status (if debug mode is enabled)
+
+## Docker
+
+Build the image:
+
+```bash
+docker build -t hr-search .
+```
+
+Run the API (persist SQLite on your host):
+
+```bash
+docker run -p 8000:8000 -v $(pwd)/hr_search.db:/app/hr_search.db hr-search
+```
+
+Optional data prep inside the container:
+
+- Seed sample data: `docker run --rm -v $(pwd)/hr_search.db:/app/hr_search.db hr-search python -c 'from utils.database import Database; Database().create_sample_data()'`
+- Create FTS index: `docker run --rm -v $(pwd)/hr_search.db:/app/hr_search.db hr-search python utils/database_fts.py create`
+- Seed large dataset: `docker run --rm -v $(pwd)/hr_search.db:/app/hr_search.db hr-search python utils/seed_large_dataset.py --records=1000000`
 
 ## Testing
 
