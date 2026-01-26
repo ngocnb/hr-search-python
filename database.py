@@ -126,53 +126,6 @@ class Database:
             "CREATE INDEX IF NOT EXISTS idx_employees_location_nc ON employees(location COLLATE NOCASE)"
         )
 
-        # FTS5 virtual table for fast text search on names/emails
-        cursor.execute(
-            """
-            CREATE VIRTUAL TABLE IF NOT EXISTS employees_fts USING fts5(
-                first_name, last_name, email,
-                content='employees',
-                content_rowid='id'
-            )
-            """
-        )
-
-        # Triggers to keep FTS index in sync
-        cursor.execute(
-            """
-            CREATE TRIGGER IF NOT EXISTS employees_ai AFTER INSERT ON employees BEGIN
-                INSERT INTO employees_fts(rowid, first_name, last_name, email)
-                VALUES (new.id, new.first_name, new.last_name, new.email);
-            END;
-            """
-        )
-        cursor.execute(
-            """
-            CREATE TRIGGER IF NOT EXISTS employees_ad AFTER DELETE ON employees BEGIN
-                INSERT INTO employees_fts(employees_fts, rowid, first_name, last_name, email)
-                VALUES('delete', old.id, old.first_name, old.last_name, old.email);
-            END;
-            """
-        )
-        cursor.execute(
-            """
-            CREATE TRIGGER IF NOT EXISTS employees_au AFTER UPDATE ON employees BEGIN
-                INSERT INTO employees_fts(employees_fts, rowid, first_name, last_name, email)
-                VALUES('delete', old.id, old.first_name, old.last_name, old.email);
-                INSERT INTO employees_fts(rowid, first_name, last_name, email)
-                VALUES (new.id, new.first_name, new.last_name, new.email);
-            END;
-            """
-        )
-
-        # Backfill FTS index for existing rows
-        cursor.execute(
-            """
-            INSERT INTO employees_fts(rowid, first_name, last_name, email)
-            SELECT id, first_name, last_name, email FROM employees;
-            """
-        )
-
         conn.commit()
         conn.close()
 

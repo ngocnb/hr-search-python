@@ -18,7 +18,7 @@ A lightweight employee search API built with Python's standard library only (no 
 
 ## Quick Start
 
-### 1. Generate SQLite Database
+### 1.1 Generate SQLite Database
 
 To initialize the database with tables and sample data, run:
 
@@ -33,7 +33,24 @@ This command will:
 - Create performance indexes
 - Populate the database with sample employee data
 
-### 1.2 Seed Large Dataset (Optional - for Performance Testing)
+### 1.2 Create/Drop Full Text Search
+
+To create or drop the full text search indexes, run:
+
+```bash
+# Create full text search indexes
+python3 utils/database_fts.py create
+
+# Drop full text search indexes
+python3 utils/database_fts.py drop
+```
+
+These commands will:
+
+- **create**: Set up full text search (FTS5) virtual tables for optimized text searching
+- **drop**: Remove the full text search virtual tables from the database
+
+### 1.3 Seed Large Dataset (Optional - for Performance Testing)
 
 To seed the database with 1 million employee records for performance testing, run:
 

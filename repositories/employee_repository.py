@@ -111,8 +111,14 @@ class EmployeeRepository:
 
         # Add search conditions
         if search_query:
+            # 1. Escape any existing double quotes in the user input to prevent injection
+            safe_query = search_query.replace('"', '""')
+
+            # 2. Wrap the query in double quotes for FTS5 literal matching
+            # Example: "john@techcorp.com" instead of john@techcorp.com
+            safe_query = f'"{safe_query}"'
             where += " AND e.id IN (SELECT rowid FROM employees_fts WHERE employees_fts MATCH ?)"
-            search_param = f"{search_query}*"
+            search_param = f"{safe_query}*"
             params.append(search_param)
 
         if company_ids:
