@@ -69,6 +69,63 @@ class TestRateLimiter(unittest.TestCase):
         # Should now be allowed
         self.assertTrue(self.limiter.is_allowed(client_ip))
 
+    def test_rate_limiter_cleanup_inactive_clients(self):
+        """Test that inactive clients are cleaned up to prevent memory leak"""
+        # Create a limiter with short cleanup interval for testing (2 seconds)
+        limiter = RateLimiter(requests_per_second=5, cleanup_interval=2)
+
+        # Add some clients
+        client1 = "192.168.1.10"
+        client2 = "192.168.1.11"
+        client3 = "192.168.1.12"
+
+        limiter.is_allowed(client1)
+        limiter.is_allowed(client2)
+        limiter.is_allowed(client3)
+
+        # Should have 3 clients
+        self.assertEqual(len(limiter.clients), 3)
+
+        # Wait for cleanup interval + some buffer
+        time.sleep(2.5)
+
+        # Add a new client - this should trigger cleanup
+        client4 = "192.168.1.13"
+        limiter.is_allowed(client4)
+
+        # Old clients should be cleaned up, only client4 should remain
+        self.assertEqual(len(limiter.clients), 1)
+        self.assertIn(client4, limiter.clients)
+        self.assertNotIn(client1, limiter.clients)
+        self.assertNotIn(client2, limiter.clients)
+        self.assertNotIn(client3, limiter.clients)
+
+    def test_rate_limiter_cleanup_keeps_active_clients(self):
+        """Test that active clients are not cleaned up"""
+        # Create a limiter with short cleanup interval for testing (2 seconds)
+        limiter = RateLimiter(requests_per_second=5, cleanup_interval=2)
+
+        # Add a client
+        client1 = "192.168.1.20"
+        limiter.is_allowed(client1)
+
+        # Wait less than cleanup interval
+        time.sleep(1)
+
+        # Make another request from the same client (keeps it active)
+        limiter.is_allowed(client1)
+
+        # Wait a bit more (total > cleanup_interval, but last activity < cleanup_interval)
+        time.sleep(1.5)
+
+        # Trigger cleanup with a new client
+        client2 = "192.168.1.21"
+        limiter.is_allowed(client2)
+
+        # client1 should still be there because it was active recently
+        self.assertIn(client1, limiter.clients)
+        self.assertIn(client2, limiter.clients)
+
 
 if __name__ == "__main__":
     unittest.main()
