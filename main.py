@@ -23,8 +23,8 @@ from utils.openapi_docs import get_openapi_docs_html, get_openapi_spec
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    datefmt='%Y-%m-%d %H:%M:%S'
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
 
@@ -121,7 +121,10 @@ class RequestHandler(BaseHTTPRequestHandler):
                 self._error_response(str(e), 400)
                 return
             except Exception as e:
-                logger.error(f"Unexpected error processing search from {client_ip}: {e}", exc_info=True)
+                logger.error(
+                    f"Unexpected error processing search from {client_ip}: {e}",
+                    exc_info=True,
+                )
                 self._error_response("Internal server error", 500)
                 return
         else:
@@ -200,7 +203,9 @@ def _watch_files_for_reload(httpd: HTTPServer):
                         os.execv(sys.executable, [sys.executable] + sys.argv)
                     except Exception as e:
                         logger.error(f"[HOT RELOAD] Error restarting: {e}")
-                        logger.info(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
+                        logger.info(
+                            f"[HOT RELOAD] Retrying in {retry_interval} seconds..."
+                        )
                         time.sleep(retry_interval)
                     break
                 elif watched_files[file_path] != current_mtime:
@@ -211,7 +216,9 @@ def _watch_files_for_reload(httpd: HTTPServer):
                         os.execv(sys.executable, [sys.executable] + sys.argv)
                     except Exception as e:
                         logger.error(f"[HOT RELOAD] Error restarting: {e}")
-                        logger.info(f"[HOT RELOAD] Retrying in {retry_interval} seconds...")
+                        logger.info(
+                            f"[HOT RELOAD] Retrying in {retry_interval} seconds..."
+                        )
                         time.sleep(retry_interval)
                     break
             except OSError:

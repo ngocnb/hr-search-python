@@ -11,6 +11,22 @@ A lightweight employee search API built with Python's standard library only (no 
 - 🌐 **CORS Support**: Cross-origin resource sharing enabled
 - 📊 **SQLite Database**: Lightweight and portable database solution
 
+## Performance Benchmark
+
+### ⚡ Lightning-Fast Full-Text Search with 1M Records
+
+Our implementation delivers sub-40ms query response times even with 1 million employee records using SQLite FTS5:
+
+![Performance Test Results - 1 Million Records Query Time](images/2026-01-26_16-51.png)
+
+**Key Results:**
+- **Query Response Time**: < 40ms with full-text search on 1 million records
+- **Search Algorithm**: SQLite FTS5 (Full-Text Search 5) with trigram tokenization
+- **Index Strategy**: Composite indexes on commonly filtered columns (status, location, department, position)
+- **Technology**: Pure SQLite with standard library - no external dependencies needed
+
+This demonstrates that a single SQLite database with proper indexing can handle enterprise-scale search workloads efficiently.
+
 ## Prerequisites
 
 - Python 3.7 or higher
