@@ -18,6 +18,7 @@ from rate_limiter import RateLimiter
 from repositories.employee_repository import EmployeeRepository
 from utils.helpers import Helpers
 from controllers.employee_controller import EmployeeController
+from utils.openapi_docs import get_openapi_docs_html, get_openapi_spec
 
 
 # Initialize database and rate limiter at module level (singleton pattern)
@@ -114,116 +115,13 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def _serve_openapi_docs(self):
         """Serve simple OpenAPI documentation page"""
-        html = """
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>HR Employee Search API</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 40px; }
-                .endpoint { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
-                .method { color: #fff; padding: 3px 8px; border-radius: 3px; font-weight: bold; }
-                .get { background: #61affe; }
-                .param { margin: 5px 0; }
-                code { background: #f0f0f0; padding: 2px 4px; border-radius: 3px; }
-            </style>
-        </head>
-        <body>
-            <h1>HR Employee Search API</h1>
-            <p>API documentation for the HR Employee Search Microservice</p>
-            
-            <div class="endpoint">
-                <span class="method post">POST</span> <code>/api/v1/employees/search</code>
-                <h3>Search Employees</h3>
-                <div class="param"><strong>company_ids</strong> (optional): Comma-separated company IDs</div>
-                <div class="param"><strong>q</strong> (optional): Search query (first name, last name, email)</div>
-                <div class="param"><strong>department_ids</strong> (optional): Comma-separated department IDs</div>
-                <div class="param"><strong>position_ids</strong> (optional): Comma-separated position IDs</div>
-                <div class="param"><strong>locations</strong> (optional): Comma-separated locations</div>
-                <div class="param"><strong>statuses</strong> (optional): Comma-separated statuses (Active, Not started, Terminated)</div>
-                <div class="param"><strong>limit</strong> (optional): Results per page (default: 50, max: 100)</div>
-                <div class="param"><strong>page</strong> (optional): Page number for pagination (default: 1)</div>
-            </div>
-            
-            <p><a href="/openapi.json">Download OpenAPI Spec</a></p>
-        </body>
-        </html>
-        """
+        html = get_openapi_docs_html()
         self._set_headers(200, "text/html")
         self.wfile.write(html.encode("utf-8"))
 
     def _serve_openapi_spec(self):
         """Serve OpenAPI specification"""
-        spec = {
-            "openapi": "3.0.0",
-            "info": {
-                "title": "HR Employee Search API",
-                "version": "1.0.0",
-                "description": "API for searching employees in HR directory",
-            },
-            "paths": {
-                "/api/v1/employees/search": {
-                    "get": {
-                        "summary": "Search employees",
-                        "parameters": [
-                            {
-                                "name": "company_ids",
-                                "in": "query",
-                                "required": True,
-                                "schema": {"type": "string"},
-                            },
-                            {
-                                "name": "q",
-                                "in": "query",
-                                "required": False,
-                                "schema": {"type": "string"},
-                            },
-                            {
-                                "name": "department_ids",
-                                "in": "query",
-                                "required": False,
-                                "schema": {"type": "string"},
-                            },
-                            {
-                                "name": "position_ids",
-                                "in": "query",
-                                "required": False,
-                                "schema": {"type": "string"},
-                            },
-                            {
-                                "name": "locations",
-                                "in": "query",
-                                "required": False,
-                                "schema": {"type": "string"},
-                            },
-                            {
-                                "name": "statuses",
-                                "in": "query",
-                                "required": False,
-                                "schema": {"type": "string"},
-                            },
-                            {
-                                "name": "limit",
-                                "in": "query",
-                                "required": False,
-                                "schema": {"type": "integer", "default": 50},
-                            },
-                            {
-                                "name": "offset",
-                                "in": "query",
-                                "required": False,
-                                "schema": {"type": "integer", "default": 0},
-                            },
-                        ],
-                        "responses": {
-                            "200": {"description": "Successful response"},
-                            "400": {"description": "Bad request"},
-                            "429": {"description": "Rate limit exceeded"},
-                        },
-                    }
-                }
-            },
-        }
+        spec = get_openapi_spec()
         self._json_response(spec)
 
 
