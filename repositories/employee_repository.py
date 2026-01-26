@@ -70,7 +70,7 @@ class EmployeeRepository:
         cursor = conn.cursor()
 
         # Get column configuration
-        columns = lru_cache(maxsize=1)(self._get_column_configuration)()
+        columns = self._get_column_configuration()
         column_names: list[str] = [col["column_name"] for col in columns]
         # build select clause based on visible columns
         select_clause = ", ".join(
@@ -162,6 +162,7 @@ class EmployeeRepository:
         conn.close()
         return employees, total_count
 
+    @lru_cache(maxsize=1)
     def _get_column_configuration(self) -> list[dict[str, Any]]:
         """Get column configuration for dynamic columns"""
         conn = self.db.get_connection()
